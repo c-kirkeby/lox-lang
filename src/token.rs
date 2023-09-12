@@ -5,6 +5,7 @@ pub struct Token {
     token_type: token_type::TokenType,
     lexeme: String,
     literal: Option<String>,
+    #[allow(unused)]
     line: usize,
 }
 

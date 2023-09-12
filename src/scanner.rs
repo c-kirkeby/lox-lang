@@ -1,11 +1,12 @@
 use crate::token::Token;
 use crate::token_type::TokenType;
+use anyhow::{bail, Result};
 
 pub struct Scanner {
     source: String,
     tokens: Vec<Token>,
-    start: usize,
-    current: usize,
+    start: u8,
+    current: u8,
     line: usize,
 }
 
@@ -21,13 +22,13 @@ impl Scanner {
     }
 
     fn is_at_end(&self) -> bool {
-        self.current >= self.source.len()
+        usize::from(self.current) >= self.source.len()
     }
 
-    pub fn scan_tokens(&mut self) -> &[Token] {
+    pub fn scan_tokens(&mut self) -> Result<&[Token]> {
         while !self.is_at_end() {
             self.start = self.current;
-            self.scan_token();
+            self.scan_token()?;
         }
 
         self.tokens.push(Token::new(
@@ -37,27 +38,33 @@ impl Scanner {
             self.line,
         ));
 
-        return &self.tokens;
+        Ok(&self.tokens)
     }
 
-    fn scan_token(&mut self) -> () {
-        for char in self.source.as_bytes().iter() {
-            match &char {
-                b'(' => self.add_token(TokenType::LeftParen),
-                b')' => self.add_token(TokenType::RightParen),
-                b'{' => self.add_token(TokenType::LeftBrace),
-                b'}' => self.add_token(TokenType::RightBrace),
-                b',' => self.add_token(TokenType::Comma),
-                b'.' => self.add_token(TokenType::Dot),
-                b'-' => self.add_token(TokenType::Minus),
-                b'+' => self.add_token(TokenType::Plus),
-                b';' => self.add_token(TokenType::Semicolon),
-                b'*' => self.add_token(TokenType::Star),
-                _ => unimplemented!("TODO: Add error handling here."),
-            }
+    fn scan_token(&mut self) -> Result<()> {
+        let token = self.advance();
+
+        match token {
+            b'(' => self.add_token(TokenType::LeftParen),
+            b')' => self.add_token(TokenType::RightParen),
+            b'{' => self.add_token(TokenType::LeftBrace),
+            b'}' => self.add_token(TokenType::RightBrace),
+            b',' => self.add_token(TokenType::Comma),
+            b'.' => self.add_token(TokenType::Dot),
+            b'-' => self.add_token(TokenType::Minus),
+            b'+' => self.add_token(TokenType::Plus),
+            b';' => self.add_token(TokenType::Semicolon),
+            b'*' => self.add_token(TokenType::Star),
+            _ => bail!("Unexpected character on line {}", self.line),
         }
-        ()
+        Ok(())
     }
 
+    fn advance(&mut self) -> u8 {
+        self.current += 1;
+        self.current
+    }
+
+    #[allow(unused)]
     fn add_token(&self, token_type: TokenType) {}
 }

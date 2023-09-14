@@ -6,8 +6,8 @@ use anyhow::{bail, Result};
 pub struct Scanner {
     source: String,
     tokens: Vec<Token>,
-    start: u8,
-    current: u8,
+    start: usize,
+    current: usize,
     line: usize,
 }
 
@@ -56,6 +56,41 @@ impl Scanner {
             b'+' => self.add_token(TokenType::Plus),
             b';' => self.add_token(TokenType::Semicolon),
             b'*' => self.add_token(TokenType::Star),
+            b'!' => {
+                if self.r#match(b'=') {
+                    self.add_token(TokenType::BangEqual)
+                } else {
+                    self.add_token(TokenType::Bang)
+                }
+            }
+            b'=' => {
+                if self.r#match(b'=') {
+                    self.add_token(TokenType::Equal)
+                } else {
+                    self.add_token(TokenType::EqualEqual)
+                }
+            }
+            b'<' => {
+                if self.r#match(b'=') {
+                    self.add_token(TokenType::Less)
+                } else {
+                    self.add_token(TokenType::LessEqual)
+                }
+            }
+            b'>' => {
+                if self.r#match(b'=') {
+                    self.add_token(TokenType::Greater)
+                } else {
+                    self.add_token(TokenType::GreaterEqual)
+                }
+            }
+            b'/' => {
+                if self.peek() != b'\n' && !self.is_at_end() {
+                    self.advance();
+                } else {
+                    self.add_token(TokenType::Slash)
+                }
+            }
             _ => bail!("Unexpected character on line {}", self.line),
         }
         Ok(())
@@ -63,7 +98,7 @@ impl Scanner {
 
     fn advance(&mut self) -> u8 {
         self.current += 1;
-        self.current
+        return self.source.as_bytes()[self.current];
     }
 
     fn add_token(&mut self, token_type: TokenType) {
@@ -74,5 +109,24 @@ impl Scanner {
             None,
             self.line,
         ))
+    }
+
+    fn r#match(&mut self, expected: u8) -> bool {
+        if self.is_at_end() {
+            return false;
+        }
+
+        if self.source.as_bytes()[self.current] != expected {
+            return false;
+        }
+        self.current += 1;
+        return true;
+    }
+
+    fn peek(&self) -> u8 {
+        if self.is_at_end() {
+            return b'\0';
+        }
+        return self.source.as_bytes()[self.current];
     }
 }

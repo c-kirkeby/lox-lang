@@ -32,7 +32,7 @@ impl Lox {
     }
 
     pub fn run(source: &String) -> Result<()> {
-        let mut scanner = Scanner::new(source.to_string());
+        let mut scanner = Scanner::new(&source);
 
         let tokens = scanner.scan_tokens()?;
         for token in tokens {
@@ -41,7 +41,7 @@ impl Lox {
         Ok(())
     }
 
-    pub fn run_prompt(&self) -> Result<()> {
+    pub fn run_prompt(&mut self) -> Result<()> {
         loop {
             print!("> ");
             io::stdout().flush().unwrap();

@@ -1,6 +1,7 @@
 use crate::token_type;
 use std::fmt;
 
+#[derive(Debug, PartialEq)]
 pub struct Token {
     token_type: token_type::TokenType,
     lexeme: String,

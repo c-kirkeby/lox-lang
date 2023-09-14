@@ -2,6 +2,7 @@ use crate::token::Token;
 use crate::token_type::TokenType;
 use anyhow::{bail, Result};
 
+#[derive(Debug, PartialEq)]
 pub struct Scanner {
     source: String,
     tokens: Vec<Token>,
@@ -11,13 +12,13 @@ pub struct Scanner {
 }
 
 impl Scanner {
-    pub fn new(source: String) -> Scanner {
+    pub fn new(source: &String) -> Scanner {
         Scanner {
             start: 0,
             current: 0,
             line: 1,
             tokens: vec![],
-            source,
+            source: source.to_string(),
         }
     }
 
@@ -65,6 +66,13 @@ impl Scanner {
         self.current
     }
 
-    #[allow(unused)]
-    fn add_token(&self, token_type: TokenType) {}
+    fn add_token(&mut self, token_type: TokenType) {
+        let text = &self.source.as_bytes()[self.start as usize..self.current as usize];
+        self.tokens.push(Token::new(
+            token_type,
+            String::from_utf8_lossy(text).to_string(),
+            None,
+            self.line,
+        ))
+    }
 }

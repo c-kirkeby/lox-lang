@@ -91,14 +91,17 @@ impl Scanner {
                     self.add_token(TokenType::Slash)
                 }
             }
+            b' ' | b'\r' | b'\t' => (),
+            b'\n' => self.line += 1,
             _ => bail!("Unexpected character on line {}", self.line),
         }
         Ok(())
     }
 
     fn advance(&mut self) -> u8 {
+        let token = self.source.as_bytes()[self.current];
         self.current += 1;
-        return self.source.as_bytes()[self.current];
+        return token;
     }
 
     fn add_token(&mut self, token_type: TokenType) {

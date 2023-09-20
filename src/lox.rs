@@ -18,7 +18,7 @@ impl Lox {
     pub fn run_file(&mut self, path: &String) -> Result<()> {
         let contents = fs::read_to_string(path).expect("Could not read file");
 
-        match Self::run(&contents) {
+        match Self::run(contents) {
             Err(_) => {
                 self.had_error = true;
             }
@@ -31,8 +31,8 @@ impl Lox {
         Ok(())
     }
 
-    pub fn run(source: &String) -> Result<()> {
-        let mut scanner = Scanner::new(&source);
+    pub fn run(source: String) -> Result<()> {
+        let mut scanner = Scanner::new(source);
 
         let tokens = scanner.scan_tokens()?;
         for token in tokens {
@@ -53,7 +53,7 @@ impl Lox {
                 break;
             }
 
-            Self::run(&line)?;
+            Self::run(line)?;
         }
         Ok(())
     }
@@ -75,6 +75,6 @@ mod tests {
     fn test_run() {
         let a = "*\n".to_string();
 
-        let _ = Lox::run(&a);
+        let _ = Lox::run(a);
     }
 }

@@ -170,12 +170,15 @@ mod tests {
         scanner.scan_tokens()?;
         assert_eq!(
             scanner.tokens,
-            vec![Token::new(
-                TokenType::String,
-                String::from("\"hello\""),
-                Some(Literal::String("hello".to_string().into_bytes())),
-                1
-            )]
+            vec![
+                Token::new(
+                    TokenType::String,
+                    String::from("\"hello\""),
+                    Some(Literal::String("hello".to_string().into_bytes())),
+                    1
+                ),
+                Token::new(TokenType::EOF, String::from(""), None, 1)
+            ]
         );
         Ok(())
     }

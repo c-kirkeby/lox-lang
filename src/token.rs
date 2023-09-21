@@ -5,6 +5,7 @@ use std::fmt;
 #[allow(dead_code)]
 pub enum Literal {
     String(Vec<u8>),
+    Number(f64),
     None,
 }
 

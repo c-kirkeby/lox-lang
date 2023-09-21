@@ -94,6 +94,7 @@ impl Scanner {
             b' ' | b'\r' | b'\t' => (),
             b'\n' => self.line += 1,
             b'"' => self.string()?,
+            b'0'..=b'9' => self.number()?,
             _ => bail!("Unexpected character on line {}", self.line),
         }
         Ok(())
@@ -134,6 +135,13 @@ impl Scanner {
         return self.source[self.current];
     }
 
+    fn peek_next(&self) -> u8 {
+        if self.current + 1 >= self.source.len() {
+            return b'\0';
+        }
+        return self.source[self.current + 1];
+    }
+
     fn string(&mut self) -> Result<()> {
         while self.peek() != b'"' && !self.is_at_end() {
             if self.peek() == b'\n' {
@@ -150,6 +158,32 @@ impl Scanner {
 
         let value = &self.source[self.start + 1..self.current - 1];
         self.add_token(TokenType::String, Some(Literal::String(value.to_vec())));
+        Ok(())
+    }
+
+    fn is_digit(c: u8) -> bool {
+        c >= b'0' && c <= b'9'
+    }
+
+    fn number(&mut self) -> Result<()> {
+        while Self::is_digit(self.peek()) {
+            self.advance();
+        }
+
+        if self.peek() == b'.' && Self::is_digit(self.peek_next()) {
+            self.advance();
+
+            while Self::is_digit(self.peek()) {
+                self.advance();
+            }
+        }
+
+        self.add_token(
+            TokenType::Number,
+            Some(Literal::Number(
+                String::from_utf8_lossy(&self.source[self.start..self.current]).parse::<f64>()?,
+            )),
+        );
         Ok(())
     }
 }
@@ -178,6 +212,31 @@ mod tests {
                     1
                 ),
                 Token::new(TokenType::EOF, String::from(""), None, 1)
+            ]
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_scan_tokens_number() -> Result<()> {
+        let mut scanner = Scanner::new("123.45\n321".to_string());
+        scanner.scan_tokens()?;
+        assert_eq!(
+            scanner.tokens,
+            vec![
+                Token::new(
+                    TokenType::Number,
+                    String::from("123.45"),
+                    Some(Literal::Number(123.45)),
+                    1
+                ),
+                Token::new(
+                    TokenType::Number,
+                    String::from("321"),
+                    Some(Literal::Number(321.0)),
+                    2
+                ),
+                Token::new(TokenType::EOF, String::from(""), None, 2)
             ]
         );
         Ok(())

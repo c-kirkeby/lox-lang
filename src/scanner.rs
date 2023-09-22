@@ -95,6 +95,7 @@ impl Scanner {
             b'\n' => self.line += 1,
             b'"' => self.string()?,
             b'0'..=b'9' => self.number()?,
+            c if c.is_ascii_alphabetic() => self.identifier(),
             _ => bail!("Unexpected character on line {}", self.line),
         }
         Ok(())
@@ -161,19 +162,15 @@ impl Scanner {
         Ok(())
     }
 
-    fn is_digit(c: u8) -> bool {
-        c >= b'0' && c <= b'9'
-    }
-
     fn number(&mut self) -> Result<()> {
-        while Self::is_digit(self.peek()) {
+        while self.peek().is_ascii_digit() {
             self.advance();
         }
 
-        if self.peek() == b'.' && Self::is_digit(self.peek_next()) {
+        if self.peek() == b'.' && self.peek_next().is_ascii_digit() {
             self.advance();
 
-            while Self::is_digit(self.peek()) {
+            while self.peek().is_ascii_digit() {
                 self.advance();
             }
         }
@@ -185,6 +182,13 @@ impl Scanner {
             )),
         );
         Ok(())
+    }
+
+    fn identifier(&mut self) {
+        while self.peek().is_ascii_alphanumeric() {
+            self.advance();
+        }
+        self.add_token(TokenType::Identifier, None);
     }
 }
 
@@ -237,6 +241,21 @@ mod tests {
                     2
                 ),
                 Token::new(TokenType::EOF, String::from(""), None, 2)
+            ]
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_scan_tokens_identifier() -> Result<()> {
+        let mut scanner = Scanner::new("hello world".to_string());
+        scanner.scan_tokens()?;
+        assert_eq!(
+            scanner.tokens,
+            vec![
+                Token::new(TokenType::Identifier, String::from("hello"), None, 1),
+                Token::new(TokenType::Identifier, String::from("world"), None, 1),
+                Token::new(TokenType::EOF, String::from(""), None, 1)
             ]
         );
         Ok(())

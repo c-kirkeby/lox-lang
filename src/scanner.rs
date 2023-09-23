@@ -188,7 +188,31 @@ impl Scanner {
         while self.peek().is_ascii_alphanumeric() {
             self.advance();
         }
-        self.add_token(TokenType::Identifier, None);
+
+        let mut token = TokenType::Identifier;
+
+        if let Ok(substring) = String::from_utf8(self.source[self.start..self.current].to_vec()) {
+            token = match substring.as_str() {
+                "and" => TokenType::And,
+                "class" => TokenType::Class,
+                "else" => TokenType::Else,
+                "false" => TokenType::False,
+                "for" => TokenType::For,
+                "fun" => TokenType::Fun,
+                "if" => TokenType::If,
+                "nil" => TokenType::Nil,
+                "or" => TokenType::Or,
+                "print" => TokenType::Print,
+                "return" => TokenType::Return,
+                "super" => TokenType::Super,
+                "this" => TokenType::This,
+                "true" => TokenType::True,
+                "var" => TokenType::Var,
+                "while" => TokenType::While,
+                _ => TokenType::Identifier,
+            };
+        }
+        self.add_token(token, None);
     }
 }
 
@@ -248,13 +272,15 @@ mod tests {
 
     #[test]
     fn test_scan_tokens_identifier() -> Result<()> {
-        let mut scanner = Scanner::new("hello world".to_string());
+        let mut scanner = Scanner::new("fun hello()".to_string());
         scanner.scan_tokens()?;
         assert_eq!(
             scanner.tokens,
             vec![
+                Token::new(TokenType::Fun, String::from("fun"), None, 1),
                 Token::new(TokenType::Identifier, String::from("hello"), None, 1),
-                Token::new(TokenType::Identifier, String::from("world"), None, 1),
+                Token::new(TokenType::LeftParen, String::from("("), None, 1),
+                Token::new(TokenType::RightParen, String::from(")"), None, 1),
                 Token::new(TokenType::EOF, String::from(""), None, 1)
             ]
         );
